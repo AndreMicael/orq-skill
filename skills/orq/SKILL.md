@@ -107,6 +107,10 @@ usuário pedir.
 3. **Quem revisa**: **OpenCode** procura só bugs reais no `git diff` (barato). Para algo crítico,
    peça também a segunda opinião de quem **não** implementou (Codex ↔ Cursor).
 4. Claude confere os achados no código, corrige os válidos (poucas linhas), testa e commita.
+5. **Logo antes do commit**, rode de novo `git status` e `git diff --stat` — o usuário ou outra
+   sessão pode ter mexido nos mesmos arquivos depois da revisão. Commite só os arquivos da tarefa
+   (`git add <arquivos>`, nunca `git add -A`) e, se o diff cresceu além do que foi revisado, pare e
+   pergunte antes de commitar.
 
 ## Relatório de tokens no fim da tarefa
 
