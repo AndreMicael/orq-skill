@@ -7,9 +7,12 @@ user-invocable: true
 
 # /orq-lazy = /orq + ponytail
 
-1. **Carregue as duas skills antes de qualquer outra coisa**: chame `Skill` com `orq` e depois com
-   `ponytail:ponytail` (nível `full`, a menos que o usuário diga outro). Siga as duas: a `/orq`
-   decide **quem** faz cada parte; o ponytail decide **quanto** se faz.
+1. **Carregue as duas partes antes de qualquer outra coisa**:
+   - chame `Skill` com `orq` — ela decide **quem** faz cada parte;
+   - leia o arquivo `ponytail.md` **desta pasta** (ao lado deste SKILL.md) e siga as regras dele no
+     nível `full` durante esta tarefa — ele decide **quanto** se faz. O ponytail já vem embutido; não
+     precisa do plugin. Ignore as menções a comandos `/ponytail …` e a "sessão inteira": aqui as
+     regras valem para a tarefa da `/orq-lazy`.
 
 2. **Escopo ponytail antes de delegar**: liste o que a mudança precisa tocar (chamadores, testes,
    config) e corte o que ninguém pediu. Se a tarefa couber em 1–3 arquivos que você já leu, faça

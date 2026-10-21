@@ -83,7 +83,7 @@ Instale e faça login nos que quiser usar:
 | OpenCode | `opencode` | `opencode auth login` | modelos `opencode/*-free` e `big-pickle` gratuitos |
 | Gemini (opcional) | `gemini` | rode `gemini` e entre com a conta Google | cota gratuita |
 
-Para a `/orq-lazy`: o plugin **ponytail** instalado no Claude Code (a skill chama `ponytail:ponytail`).
+A `/orq-lazy` já traz as regras do [ponytail](https://github.com/DietrichGebert/ponytail) (MIT, de DietrichGebert) em `skills/orq-lazy/ponytail.md` — não precisa instalar o plugin.
 
 As skills foram escritas e testadas no **Windows com PowerShell 5.1** (há uma seção com as armadilhas
 dele). Em macOS/Linux os comandos dos agentes são os mesmos; ignore as notas de PowerShell.
