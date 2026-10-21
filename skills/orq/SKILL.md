@@ -108,6 +108,27 @@ usuário pedir.
    peça também a segunda opinião de quem **não** implementou (Codex ↔ Cursor).
 4. Claude confere os achados no código, corrige os válidos (poucas linhas), testa e commita.
 
+## Relatório de tokens no fim da tarefa
+
+Rode cada agente de um jeito que mostre o consumo e anote o número a cada chamada:
+
+| Agente | Como obter os tokens |
+|---|---|
+| Codex | Redirecione a saída completa (`*> log.txt`); no fim aparece `tokens used` e, na linha seguinte, o total. |
+| OpenCode | Acrescente `--format json`: some `part.tokens.total` dos eventos `step_finish` (a resposta fica nos eventos `text`). |
+| Cursor | Use `--output-format json`: `usage.inputTokens` + `usage.outputTokens` (a resposta fica em `result`). |
+| Gemini / outros | Use o que a CLI mostrar; se não mostrar, escreva "não informado". |
+
+No fim da tarefa, mostre uma tabela curta:
+
+| IA | Chamadas | Tokens |
+|---|---|---|
+| Codex | 1 | 24.223 |
+| OpenCode | 1 | 13.279 |
+| Claude (esta sessão) | — | digite `/cost` para ver |
+
+O Claude não enxerga o próprio consumo de dentro da sessão: sempre indique o `/cost`.
+
 ## Armadilhas do PowerShell 5.1
 
 - Aspas duplas dentro do pedido quebram o argumento passado ao `codex`/`agent` ("unknown option").

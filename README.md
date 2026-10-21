@@ -25,6 +25,7 @@ você ──/orq <tarefa>──▶ Claude
 - **Quem implementa**: Codex para mudanças bem especificadas; Cursor quando a mudança se espalha por
   muitos arquivos ou exige entender o projeto todo (nova tela, refatoração, UI).
 - **Quem revisa**: OpenCode (barato). Em algo crítico, quem **não** implementou dá uma segunda opinião.
+- **Tokens**: no fim, o Claude mostra uma tabela com os tokens gastos por cada IA (o dele próprio aparece com `/cost`).
 - **Tarefa pequena** (1–3 arquivos que o Claude já leu): ele faz sozinho — delegar custaria mais.
 - O padrão dos agentes é **somente leitura**; só editam quando você autoriza na conversa, e um por vez no mesmo repositório.
 
