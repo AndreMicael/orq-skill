@@ -29,13 +29,14 @@ Abra uma nova sessão do Claude Code e digite `/orq` ou `/orq-lazy` seguido da t
 
 ## Pré-requisitos
 
-Instale e faça login nos agentes que quiser usar (basta um ou dois; o Claude escolhe entre os que existem):
+Instale e faça login nos agentes que quiser usar. **Não precisa ter todos**: a `/orq` detecta quais existem na máquina e troca o que faltar pelo substituto (ex.: sem Cursor, o Codex implementa; sem OpenCode, o Gemini ou o outro agente revisa; sem nenhum, o próprio Claude faz).
 
 | Agente | CLI | Login |
 |---|---|---|
 | Codex (OpenAI/GPT) | `codex` | `codex login` |
 | OpenCode | `opencode` | `opencode auth login` (os modelos `opencode/*-free` e `big-pickle` são gratuitos) |
 | Cursor | `agent` (Cursor CLI) | `agent login` |
+| Gemini (opcional) | `gemini` | rode `gemini` uma vez e entre com a conta Google (cota gratuita) |
 
 Para o `/orq-lazy`: o plugin **ponytail** instalado no Claude Code (a skill chama `ponytail:ponytail`).
 

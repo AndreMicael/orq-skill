@@ -13,6 +13,33 @@ nada sozinhos — a decisão final é sua e do usuário.
 
 Todos foram testados neste PC (PowerShell) com saída não interativa.
 
+## Passo 0: quais agentes existem nesta máquina
+
+Antes de delegar, descubra uma vez por sessão quais CLIs estão instaladas e use só essas:
+
+```powershell
+foreach ($c in 'codex','opencode','agent','cursor-agent','gemini','claude') {
+  "{0,-13} {1}" -f $c, [bool](Get-Command $c -ErrorAction SilentlyContinue) }
+```
+No Windows, prefira essa versão em PowerShell: o Cursor CLI é um `.ps1` que o bash (Git Bash) não
+enxerga. Em macOS/Linux: `for c in codex opencode agent cursor-agent gemini claude; do printf '%-13s ' $c; command -v $c >/dev/null && echo True || echo False; done`
+
+O Cursor CLI pode aparecer como `agent` ou `cursor-agent` — use o nome que existir nos comandos abaixo.
+Se faltar um agente, troque pelo substituto e avise o usuário em uma linha qual foi usado:
+
+| Falta | Papel dele | Substituto, nesta ordem |
+|---|---|---|
+| Cursor | implementar mudança ampla / varrer o projeto | Codex (`-s workspace-write`) → Gemini CLI → OpenCode sem `--agent plan` → Claude CLI |
+| Codex | implementar mudança bem especificada / segunda opinião | Cursor → Gemini CLI → OpenCode → Claude CLI |
+| OpenCode | revisão barata / resumos | Gemini CLI (cota gratuita) → quem **não** implementou (Codex ↔ Cursor) → Claude CLI |
+| Todos | — | Faça você mesmo e diga como instalar ao menos um (ver README da skill) |
+
+Com um único agente disponível: ele implementa e você (Claude) revisa o diff.
+
+**Gemini CLI** (opcional, cota gratuita do Google): `gemini -p "<pedido>"` na pasta do projeto; para
+permitir edição, `--approval-mode auto_edit`. Os nomes das opções mudam entre versões — confira com
+`gemini --help` antes do primeiro uso (não testado na máquina onde esta skill foi escrita).
+
 ## Quem faz o quê
 
 | Agente | Cota | Bom para | Comando (somente leitura) |
