@@ -96,3 +96,16 @@ Os comandos do Gemini não foram testados — confira com `gemini --help` no pri
 - Os agentes começam em modo somente leitura e nunca usam `--yolo` ou bypass de aprovação sem você pedir.
 - Toda resposta dos agentes é tratada como não verificada: o Claude confere o diff, roda os testes e
   diz o que conferiu antes de commitar.
+
+## Créditos
+
+- **[ponytail](https://github.com/DietrichGebert/ponytail)** — © 2026 DietrichGebert, licença MIT.
+  As regras do modo lazy em [`skills/orq-lazy/ponytail.md`](skills/orq-lazy/ponytail.md) são uma
+  cópia sem alterações da skill `ponytail` (v5.2.0). A licença original está em
+  [`skills/orq-lazy/LICENSE-ponytail`](skills/orq-lazy/LICENSE-ponytail). Se gostar, instale e apoie
+  o projeto original.
+- **Agentes orquestrados**: [Claude Code](https://claude.com/claude-code) (Anthropic),
+  [Codex CLI](https://github.com/openai/codex) (OpenAI), [Cursor CLI](https://cursor.com/cli),
+  [OpenCode](https://opencode.ai) e [Gemini CLI](https://github.com/google-gemini/gemini-cli) (Google).
+  Este projeto não é afiliado a nenhum deles; os nomes pertencem aos respectivos donos.
+- Skills `orq`, `orq-lazy` e `cursor-agent`: [AndreMicael](https://github.com/AndreMicael), escritas com o Claude Code.

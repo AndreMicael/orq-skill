@@ -7,6 +7,9 @@ user-invocable: true
 
 # /orq-lazy = /orq + ponytail
 
+> Inclui as regras do [ponytail](https://github.com/DietrichGebert/ponytail) (© 2026 DietrichGebert,
+> MIT) em `ponytail.md`, sem alterações; licença em `LICENSE-ponytail`.
+
 1. **Carregue as duas partes antes de qualquer outra coisa**:
    - chame `Skill` com `orq` — ela decide **quem** faz cada parte;
    - leia o arquivo `ponytail.md` **desta pasta** (ao lado deste SKILL.md) e siga as regras dele no
