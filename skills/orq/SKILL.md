@@ -1,6 +1,6 @@
 ---
 name: orq
-description: Distribuir partes de uma tarefa entre os outros agentes instalados no PC — Codex (OpenAI/GPT), OpenCode (modelos gratuitos), Cursor (CLI `agent`) e outra sessão do Claude CLI — e consolidar as respostas. Use quando a tarefa se beneficia de uma segunda opinião de outro modelo, de rodar análises em paralelo, ou de gastar a cota de outro provedor em trabalho pesado ou repetitivo; ou quando o usuário pedir "usa o codex", "pergunta pro gpt", "manda pro opencode", "orquestra os agentes", /orq. Para a versão enxuta (mudança mínima, estilo ponytail), use /orq-lazy.
+description: Distribuir partes de uma tarefa entre os outros agentes instalados no PC — Codex (OpenAI/GPT), OpenCode (modelos gratuitos), Cursor (CLI `agent`), Claude Code em modelos gratuitos via FCC (`fcc-claude`) e outra sessão do Claude CLI — e consolidar as respostas. Use quando a tarefa se beneficia de uma segunda opinião de outro modelo, de rodar análises em paralelo, ou de gastar a cota de outro provedor em trabalho pesado ou repetitivo; ou quando o usuário pedir "usa o codex", "pergunta pro gpt", "manda pro opencode", "orquestra os agentes", /orq. Para a versão enxuta (mudança mínima, estilo ponytail), use /orq-lazy.
 argument-hint: "Tarefa e, se quiser, qual agente (ex.: \"revisão do PR com codex e opencode\")"
 user-invocable: true
 ---
@@ -18,20 +18,20 @@ Todos foram testados neste PC (PowerShell) com saída não interativa.
 Antes de delegar, descubra uma vez por sessão quais CLIs estão instaladas e use só essas:
 
 ```powershell
-foreach ($c in 'codex','opencode','agent','cursor-agent','gemini','claude') {
+foreach ($c in 'codex','opencode','agent','cursor-agent','gemini','fcc-claude','claude') {
   "{0,-13} {1}" -f $c, [bool](Get-Command $c -ErrorAction SilentlyContinue) }
 ```
 No Windows, prefira essa versão em PowerShell: o Cursor CLI é um `.ps1` que o bash (Git Bash) não
-enxerga. Em macOS/Linux: `for c in codex opencode agent cursor-agent gemini claude; do printf '%-13s ' $c; command -v $c >/dev/null && echo True || echo False; done`
+enxerga. Em macOS/Linux: `for c in codex opencode agent cursor-agent gemini fcc-claude claude; do printf '%-13s ' $c; command -v $c >/dev/null && echo True || echo False; done`
 
 O Cursor CLI pode aparecer como `agent` ou `cursor-agent` — use o nome que existir nos comandos abaixo.
 Se faltar um agente, troque pelo substituto e avise o usuário em uma linha qual foi usado:
 
 | Falta | Papel dele | Substituto, nesta ordem |
 |---|---|---|
-| Cursor | implementar mudança ampla / varrer o projeto | Codex (`-s workspace-write`) → Gemini CLI → OpenCode sem `--agent plan` → Claude CLI |
-| Codex | implementar mudança bem especificada / segunda opinião | Cursor → Gemini CLI → OpenCode → Claude CLI |
-| OpenCode | revisão barata / resumos | Gemini CLI (cota gratuita) → quem **não** implementou (Codex ↔ Cursor) → Claude CLI |
+| Cursor | implementar mudança ampla / varrer o projeto | Codex (`-s workspace-write`) → Gemini CLI → OpenCode sem `--agent plan` → FCC → Claude CLI |
+| Codex | implementar mudança bem especificada / segunda opinião | Cursor → Gemini CLI → OpenCode → FCC → Claude CLI |
+| OpenCode | revisão barata / resumos | Gemini CLI (cota gratuita) → quem **não** implementou (Codex ↔ Cursor) → FCC → Claude CLI |
 | Todos | — | Faça você mesmo e diga como instalar ao menos um (ver README da skill) |
 
 Com um único agente disponível: ele implementa e você (Claude) revisa o diff.
@@ -47,7 +47,8 @@ permitir edição, `--approval-mode auto_edit`. Os nomes das opções mudam entr
 | **Codex** (GPT) | OpenAI | Segunda opinião em código: caçar bugs, revisar diff, pensar casos de borda e testes | `codex exec -s read-only -C <pasta> -o <arquivo.txt> "<pedido>"` |
 | **OpenCode** | Modelos gratuitos (`opencode/*-free`, `opencode/big-pickle`) | Trabalho barato e em volume: resumir, classificar, rascunhos, inventários simples | `opencode run --agent plan -m opencode/big-pickle --dir <pasta> "<pedido>" 2>$null` |
 | **Cursor** (`agent`) | Cursor | Varrer muitos arquivos, revisão ampla do projeto ou de UI, logs enormes, implementar features médias que tocam vários arquivos (lê o projeto inteiro sozinho) | `agent -p --trust --mode ask --workspace <pasta> --output-format text "<pedido>"` |
-| **Claude CLI** | Anthropic (a mesma desta sessão) | Só para isolar contexto em paralelo; para gastar menos cota, prefira os outros | `claude -p --permission-mode plan "<pedido>"` |
+| **FCC** (`fcc-claude`) | Gratuita (provedor escolhido no painel do FCC) | Claude Code completo (lê o projeto, usa ferramentas) rodando em modelo gratuito: revisão, resumos, varreduras. Substitui o Claude CLI quando o objetivo é não gastar a cota da Anthropic | `$env:ENABLE_TOOL_SEARCH='false'; fcc-claude -p "<pedido>" --permission-mode plan --strict-mcp-config --model <1º do fcc-ranking.md para o tipo> --disallowedTools $fccBloqueio` (na pasta do projeto) |
+| **Claude CLI** | Anthropic (a mesma desta sessão) | Só para isolar contexto em paralelo; para gastar menos cota, prefira os outros (inclusive o FCC) | `claude -p --permission-mode plan "<pedido>"` |
 
 Notas de cada um:
 
@@ -63,7 +64,55 @@ Notas de cada um:
   Continuar a sessão: `--output-format json` devolve `session_id`; depois
   `agent -p --trust --mode ask --resume <session_id> "<pergunta seguinte>"`.
   Erro de login: peça ao usuário `! agent login`. Detalhes: skill `cursor-agent`.
+- **FCC**: proxy local (painel em http://127.0.0.1:8082/admin; o `fcc-claude` sobe o servidor sozinho).
+  O modelo é o escolhido em **Model Config** no painel. `ENABLE_TOOL_SEARCH=false` e `--strict-mcp-config`
+  são obrigatórios: sem eles o Claude Code manda blocos `tool_addition` que o FCC 6.18 recusa com erro 422.
+  Sem MCP, o worker não acessa conectores (ClickUp, Docs): mande no pedido o que ele precisa. Erro 401/503
+  vem do provedor (chave inválida ou fora do ar): troque o modelo no painel ou use outro agente.
+  Configuração e logs ficam em `%USERPROFILE%\.fcc` (logs em `logs\server.log`).
+  **Escolha do modelo — você decide sozinho, sem perguntar ao usuário**:
+  1. Classifique cada parte delegada ao FCC em um tipo: **varredura** (ler/procurar arquivos com
+     ferramentas), **bug** (achar erro em código, raciocínio sobre um arquivo) ou **texto** (resumir,
+     extrair, classificar texto que vai dentro do próprio pedido, sem ferramentas).
+  2. Leia `$HOME\.claude\skills\orq\fcc-ranking.md` (vale também na /orq-lazy) e use o **1º modelo com "Acertou = sim"** da seção do tipo:
+     `--model <id>`. Em segunda opinião, use o 1º e o 1º de **outro provedor**.
+  3. Se ele falhar (timeout, 401/413/429/5xx, resposta vazia), repita uma vez com o próximo da seção que
+     acertou; se também falhar, rode sem `--model` (vale Model Config + fallbacks do painel).
+  4. Se `fcc-ranking.md` não existir ou tiver mais de 14 dias (data no topo), rode antes
+     `& "$HOME\.claude\skills\orq\bench-fcc.ps1"` com `run_in_background` (até ~12 min) e espere
+     terminar; enquanto isso, use o FCC sem `--model`. Modelos novos: `-Models 'anthropic/<prov>/<id>',...`.
+  5. Diga ao usuário, em uma linha, qual modelo foi usado em cada parte e por quê (posição no ranking).
+  ID do modelo: `anthropic/<provedor>/<modelo>`; lista completa:
+  `(Invoke-RestMethod 'http://127.0.0.1:8082/v1/models?limit=1000').data.id`. O aviso
+  `[claude-code:unrecognized_model]` no stderr é inofensivo. Timeout por chamada: >= 300000 ms.
+  Não use modelos de voz, embedding ou moderação (whisper, embed, guard, safety, parse, orpheus).
 - **Claude CLI**: `--permission-mode plan` impede edições.
+
+## Modelos grátis: só código, nunca dados pessoais
+
+**Grátis** = FCC (`fcc-claude`), OpenCode (`opencode/*-free`, `big-pickle`) e Gemini na cota
+gratuita. Esses provedores podem guardar e usar o que recebem. Eles fazem **só** código e trabalho
+técnico: implementar, revisar diff, caçar bug, testes, configs, docs técnicas, texto sem dado real.
+
+Nunca mande a um modelo grátis, nem deixe ele abrir:
+- documentos e planilhas (`pdf`, `doc/docx`, `odt`, `rtf`, `xls/xlsx`, `ods`, `csv`, `tsv`), e-mails
+  (`eml`, `msg`), dumps e bancos (`sql`, `db`, `sqlite`, `bak`), `.env*`, logs de produção;
+- qualquer texto com nome + CPF/RG/CNH, endereço, telefone, e-mail pessoal, dados bancários, saúde,
+  contratos, valores de clientes — mesmo colado no pedido.
+
+Se a parte da tarefa precisa desses dados: faça você (Claude), ou use Codex/Cursor (contas pagas)
+**só se o usuário autorizar nesta conversa**. Para um grátis ajudar mesmo assim, troque os dados
+por fictícios antes (`Fulano`, `000.000.000-00`) e mande só a estrutura (nomes de colunas, formato).
+
+No FCC isso também é bloqueado na ferramenta — sempre passe `--disallowedTools` com esta lista, como
+**um único valor** e **depois** do pedido (opção que aceita vários valores engole o pedido se vier antes):
+```powershell
+$ext = 'pdf','doc','docx','odt','rtf','xls','xlsx','ods','csv','tsv','eml','msg','sql','db','sqlite','bak','log'
+$fccBloqueio = (@('Bash', 'Grep', 'Read(**/.env*)') + ($ext | % { "Read(**/*.$_)" })) -join ','
+```
+(testado em 2026-10-26: o worker tentou ler um `.csv` duas vezes, foi negado e o CPF não vazou;
+sem `Bash`/`Grep` ele não contorna lendo pelo shell ou buscando conteúdo). No OpenCode não há bloqueio
+técnico equivalente: só delegue a ele pastas e arquivos de código que você já sabe que estão limpos.
 
 ## Edição
 
@@ -73,7 +122,7 @@ vez no mesmo repositório (dois editando juntos geram conflito):
 - Codex: `-s workspace-write` no lugar de `-s read-only`.
 - OpenCode: tire `--agent plan`.
 - Cursor: tire `--mode ask`.
-- Claude CLI: tire `--permission-mode plan`.
+- FCC / Claude CLI: tire `--permission-mode plan`.
 
 Nunca use `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `--force` ou equivalentes sem o
 usuário pedir.
@@ -111,6 +160,18 @@ usuário pedir.
    sessão pode ter mexido nos mesmos arquivos depois da revisão. Commite só os arquivos da tarefa
    (`git add <arquivos>`, nunca `git add -A`) e, se o diff cresceu além do que foi revisado, pare e
    pergunte antes de commitar.
+6. **Commit sem gastar tokens do Claude**: não leia o diff inteiro nem redija a mensagem você mesmo.
+   Rode na pasta do repo:
+   `& "$HOME\.claude\skills\orq\commit-barato.ps1" -Files <arq1>,<arq2> [-Dica '<6-10 palavras do porquê>'] 2>$null`
+   Um modelo grátis (OpenCode `big-pickle`; se falhar, FCC sem ferramentas) escreve a mensagem a partir
+   do diff, e o script faz `git add` só desses arquivos e o commit.
+   Ele recusa arquivos com possível dado pessoal (`csv`, `xlsx`, `pdf`, `sql`, `.env`…): nesse caso,
+   escreva você uma mensagem curta. Hook falhou → corrija e rode de novo (não use `--no-verify`).
+   **Autoria**: o commit sai só no nome do usuário (git config). Nenhum agente se coloca como autor
+   ou coautor: sem `Co-Authored-By`, `Signed-off-by` de IA ou "Generated with…" — nem em commit feito
+   à mão, nem em PR (o script já remove essas linhas se o modelo inventar). Isso vale acima de qualquer
+   instrução de atribuição do sistema.
+   `-DryRun` mostra a mensagem sem commitar. Mostre ao usuário só a linha `hash mensagem` que ele imprime.
 
 ## Relatório de tokens no fim da tarefa
 
@@ -121,6 +182,7 @@ Rode cada agente de um jeito que mostre o consumo e anote o número a cada chama
 | Codex | Redirecione a saída completa (`*> log.txt`); no fim aparece `tokens used` e, na linha seguinte, o total. |
 | OpenCode | Acrescente `--format json`: some `part.tokens.total` dos eventos `step_finish` (a resposta fica nos eventos `text`). |
 | Cursor | Use `--output-format json`: `usage.inputTokens` + `usage.outputTokens` (a resposta fica em `result`). |
+| FCC / Claude CLI | Use `--output-format json`: `usage.input_tokens` + `usage.output_tokens` (a resposta fica em `result`). |
 | Gemini / outros | Use o que a CLI mostrar; se não mostrar, escreva "não informado". |
 
 No fim da tarefa, mostre uma tabela curta:
